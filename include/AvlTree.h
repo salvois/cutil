@@ -1,6 +1,6 @@
 /*
 Intrusive AVL tree container.
-Copyright 2015-2018 Salvatore ISAJA. All rights reserved.
+Copyright 2015-2020 Salvatore ISAJA. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+
+/** Internal balance factors. */
+enum AvlTree_Balance {
+    AvlTree_balanced,
+    AvlTree_rightHeavy,
+    AvlTree_leftHeavy
+};
 
 typedef struct AvlTree_Node AvlTree_Node;
 
@@ -78,18 +85,19 @@ static inline bool AvlTree_isEmpty(const AvlTree *tree) {
     return tree->root == NULL;
 }
 
+static inline AvlTree_Node *AvlTree_getParent(const AvlTree_Node *node) {
+    return (AvlTree_Node *) (node->parent & ~3);
+}
+
+static inline int AvlTree_getBalance(const AvlTree_Node *node) {
+    return node->parent & 3;
+}
+
 /** Removes the specified node from an AVL tree. */
 void AvlTree_remove(AvlTree *tree, AvlTree_Node *node);
 
 /** Internal function called after insertion of a node into an AVL tree. */
-void AvlTree_postInsert(AvlTree *tree, AvlTree_Node *node);
-
-/** Internal balance factors. */
-enum AvlTree_Balance {
-    AvlTree_balanced,
-    AvlTree_rightHeavy,
-    AvlTree_leftHeavy
-};
+void AvlTree_rebalanceAfterInsertion(AvlTree *tree, AvlTree_Node *node);
 
 /******************************************************************************
  * Example instantiation with a node with uintptr_t key.
@@ -152,7 +160,7 @@ void functionName(AvlTree *tree, AvlTree_Node *node) {\
             }\
             node->parent = (uintptr_t) i | AvlTree_balanced;\
         }\
-        AvlTree_postInsert(tree, node);\
+        AvlTree_rebalanceAfterInsertion(tree, node);\
     } else {\
         node->parent = AvlTree_balanced; /* no parent */\
         tree->root = node;\

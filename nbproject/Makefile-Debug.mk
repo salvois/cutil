@@ -35,8 +35,20 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/test/NaryTrieTest.o
+	${OBJECTDIR}/src/AvlTree.o \
+	${OBJECTDIR}/test/AvlTreeTest.o
 
+# Test Directory
+TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
+
+# Test Files
+TESTFILES= \
+	${TESTDIR}/TestFiles/f1
+
+# Test Object Files
+TESTOBJECTFILES= \
+	${TESTDIR}/test/AvlTreeUnitTest.o \
+	${TESTDIR}/test/test.o
 
 # C Compiler Flags
 CFLAGS=-Wall -std=gnu99 -m32
@@ -62,13 +74,74 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/cutil: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/cutil ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/test/NaryTrieTest.o: test/NaryTrieTest.c
+${OBJECTDIR}/src/AvlTree.o: src/AvlTree.c
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/AvlTree.o src/AvlTree.c
+
+${OBJECTDIR}/test/AvlTreeTest.o: test/AvlTreeTest.c
 	${MKDIR} -p ${OBJECTDIR}/test
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/test/NaryTrieTest.o test/NaryTrieTest.c
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/test/AvlTreeTest.o test/AvlTreeTest.c
 
 # Subprojects
 .build-subprojects:
+
+# Build Test Targets
+.build-tests-conf: .build-tests-subprojects .build-conf ${TESTFILES}
+.build-tests-subprojects:
+
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/test/AvlTreeUnitTest.o ${TESTDIR}/test/test.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.c} -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS}   
+
+
+${TESTDIR}/test/AvlTreeUnitTest.o: test/AvlTreeUnitTest.c 
+	${MKDIR} -p ${TESTDIR}/test
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Iinclude -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/test/AvlTreeUnitTest.o test/AvlTreeUnitTest.c
+
+
+${TESTDIR}/test/test.o: test/test.c 
+	${MKDIR} -p ${TESTDIR}/test
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Iinclude -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/test/test.o test/test.c
+
+
+${OBJECTDIR}/src/AvlTree_nomain.o: ${OBJECTDIR}/src/AvlTree.o src/AvlTree.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/AvlTree.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/AvlTree_nomain.o src/AvlTree.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/src/AvlTree.o ${OBJECTDIR}/src/AvlTree_nomain.o;\
+	fi
+
+${OBJECTDIR}/test/AvlTreeTest_nomain.o: ${OBJECTDIR}/test/AvlTreeTest.o test/AvlTreeTest.c 
+	${MKDIR} -p ${OBJECTDIR}/test
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/test/AvlTreeTest.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/test/AvlTreeTest_nomain.o test/AvlTreeTest.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/test/AvlTreeTest.o ${OBJECTDIR}/test/AvlTreeTest_nomain.o;\
+	fi
+
+# Run Test Targets
+.test-conf:
+	@if [ "${TEST}" = "" ]; \
+	then  \
+	    ${TESTDIR}/TestFiles/f1 || true; \
+	else  \
+	    ./${TEST} || true; \
+	fi
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}

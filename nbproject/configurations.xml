@@ -18,12 +18,21 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>test/NaryTrieTest.c</itemPath>
+      <itemPath>src/AvlTree.c</itemPath>
+      <itemPath>test/AvlTreeTest.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="cutiltests"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>test/AvlTreeUnitTest.c</itemPath>
+        <itemPath>test/test.c</itemPath>
+        <itemPath>test/test.h</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -56,6 +65,21 @@
       </compileType>
       <item path="README.md" ex="false" tool="3" flavor2="0">
       </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
       <item path="include/AvlTree.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/BinaryHeap.h" ex="false" tool="3" flavor2="0">
@@ -68,7 +92,15 @@
       </item>
       <item path="include/tscStopwatch.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="test/NaryTrieTest.c" ex="false" tool="0" flavor2="0">
+      <item path="src/AvlTree.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/AvlTreeTest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/AvlTreeUnitTest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/test.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/test.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -105,6 +137,21 @@
       </compileType>
       <item path="README.md" ex="false" tool="3" flavor2="0">
       </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
       <item path="include/AvlTree.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/BinaryHeap.h" ex="false" tool="3" flavor2="0">
@@ -117,7 +164,15 @@
       </item>
       <item path="include/tscStopwatch.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="test/NaryTrieTest.c" ex="false" tool="0" flavor2="0">
+      <item path="src/AvlTree.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/AvlTreeTest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/AvlTreeUnitTest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/test.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="test/test.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

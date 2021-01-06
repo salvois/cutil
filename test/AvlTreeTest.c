@@ -291,6 +291,10 @@ int main() {
     #ifndef NDEBUG
     for (size_t i = 0; i < 10; ++i) {
         printf("Round %zu\n", i);
+        testConsistency(1);
+        testConsistency(3);
+        testConsistency(5);
+        testConsistency(10);
         testConsistency(5000);
     }
     #else
