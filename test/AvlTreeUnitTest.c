@@ -42,20 +42,20 @@ static inline bool Value_isLess(AvlTree_Node *node, AvlTree_Node *other) {
 AvlTree_instantiateInsert(AvlTreeTest_insert, Value_isLess);
 
 static void assertTree(const char *func, int line, AvlTree *tree, Value *root, Value *leftmost, Value *rightmost) {
-    ASSERTN(func, line, tree->root == (root != NULL ? &root->node : NULL));
-    ASSERTN(func, line, tree->leftmost == (leftmost != NULL ? &leftmost->node : NULL));
-    ASSERTN(func, line, tree->rightmost == (rightmost != NULL ? &rightmost->node : NULL));
+    ASSERTN(func, line, tree->sentinel.left == (root != NULL ? &root->node : &tree->sentinel));
+    ASSERTN(func, line, tree->leftmost == (leftmost != NULL ? &leftmost->node : &tree->sentinel));
+    ASSERTN(func, line, tree->rightmost == (rightmost != NULL ? &rightmost->node : &tree->sentinel));
 }
 
-static void assertNode(const char *func, int line, Value *value, Value* parent, Value* left, Value* right, enum AvlTree_Balance balance) {
-    ASSERTN(func, line, AvlTree_getParent(&value->node) == (parent != NULL ? &parent->node : NULL));
+static void assertNode(const char *func, int line, AvlTree *tree, Value *value, Value* parent, Value* left, Value* right, enum AvlTree_Balance balance) {
+    ASSERTN(func, line, AvlTree_getParent(&value->node) == (parent != NULL ? &parent->node : &tree->sentinel));
     ASSERTN(func, line, AvlTree_getBalance(&value->node) == balance);
-    ASSERTN(func, line, value->node.left == (left != NULL ? &left->node : NULL));
-    ASSERTN(func, line, value->node.right == (right != NULL ? &right->node : NULL));
+    ASSERTN(func, line, value->node.left == (left != NULL ? &left->node : &tree->sentinel));
+    ASSERTN(func, line, value->node.right == (right != NULL ? &right->node : &tree->sentinel));
 }
 
 #define ASSERT_TREE(tree, root, leftmost, rightmost) assertTree(__func__, __LINE__, tree, root, leftmost, rightmost)
-#define ASSERT_NODE(value, parent, left, right, balance) assertNode(__func__, __LINE__, value, parent, left, right, balance)
+#define ASSERT_NODE(tree, value, parent, left, right, balance) assertNode(__func__, __LINE__, tree, value, parent, left, right, balance)
 
 static void AvlTreeTest_initialize() {
     AvlTree tree;
@@ -73,7 +73,7 @@ static void AvlTreeTest_insertOne() {
     
     //  13
     ASSERT_TREE(&tree, &v13, &v13, &v13);
-    ASSERT_NODE(&v13, NULL, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, NULL, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_insertTwoGreater() {
@@ -88,8 +88,8 @@ static void AvlTreeTest_insertTwoGreater() {
     //  13
     //    14
     ASSERT_TREE(&tree, &v13, &v13, &v14);
-    ASSERT_NODE(&v13, NULL, NULL, &v14, AvlTree_rightHeavy);
-    ASSERT_NODE(&v14, &v13, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, NULL, NULL, &v14, AvlTree_rightHeavy);
+    ASSERT_NODE(&tree, &v14, &v13, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_insertTwoLess() {
@@ -104,8 +104,8 @@ static void AvlTreeTest_insertTwoLess() {
     //    13
     //  12
     ASSERT_TREE(&tree, &v13, &v12, &v13);
-    ASSERT_NODE(&v13, NULL, &v12, NULL, AvlTree_leftHeavy);
-    ASSERT_NODE(&v12, &v13, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, NULL, &v12, NULL, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v12, &v13, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_insertThreeWithLeftRotation() {
@@ -122,9 +122,9 @@ static void AvlTreeTest_insertThreeWithLeftRotation() {
     //    14
     //  13  15
     ASSERT_TREE(&tree, &v14, &v13, &v15);
-    ASSERT_NODE(&v14, NULL, &v13, &v15, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v13, &v15, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_insertThreeWithRightRotation() {
@@ -141,9 +141,9 @@ static void AvlTreeTest_insertThreeWithRightRotation() {
     //    14
     //  13  15
     ASSERT_TREE(&tree, &v14, &v13, &v15);
-    ASSERT_NODE(&v14, NULL, &v13, &v15, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v13, &v15, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_insertThreeWithRightLeftRotation() {
@@ -160,9 +160,9 @@ static void AvlTreeTest_insertThreeWithRightLeftRotation() {
     //    14
     //  13  15
     ASSERT_TREE(&tree, &v14, &v13, &v15);
-    ASSERT_NODE(&v14, NULL, &v13, &v15, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v13, &v15, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_insertThreeWithLeftRightRotation() {
@@ -179,9 +179,9 @@ static void AvlTreeTest_insertThreeWithLeftRightRotation() {
     //    14
     //  13  15
     ASSERT_TREE(&tree, &v14, &v13, &v15);
-    ASSERT_NODE(&v14, NULL, &v13, &v15, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v13, &v15, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_complexInsert() {
@@ -214,16 +214,16 @@ static void AvlTreeTest_complexInsert() {
     //    8      12       15  17
     //   1     11  13
     ASSERT_TREE(&tree, &v14, &v1, &v17);
-    ASSERT_NODE(&v14, NULL, &v9,  &v16, AvlTree_leftHeavy);
-    ASSERT_NODE(&v9,  &v14, &v8,  &v12, AvlTree_balanced);
-    ASSERT_NODE(&v16, &v14, &v15, &v17, AvlTree_balanced);
-    ASSERT_NODE(&v8,  &v9,  &v1,  NULL, AvlTree_leftHeavy);
-    ASSERT_NODE(&v12, &v9,  &v11, &v13, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v16, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v17, &v16, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v1,  &v8,  NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v11, &v12, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v12, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v9,  &v16, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v9,  &v14, &v8,  &v12, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v16, &v14, &v15, &v17, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v8,  &v9,  &v1,  NULL, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v12, &v9,  &v11, &v13, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v16, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v17, &v16, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v1,  &v8,  NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v11, &v12, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v12, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_removeNodeWithoutChildren() {
@@ -249,10 +249,10 @@ static void AvlTreeTest_removeNodeWithoutChildren() {
     //     12         15
     //       13
     ASSERT_TREE(&tree, &v14, &v12, &v15);
-    ASSERT_NODE(&v14, NULL, &v12, &v15, AvlTree_leftHeavy);
-    ASSERT_NODE(&v12, &v14, NULL, &v13, AvlTree_rightHeavy);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v12, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v12, &v15, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v12, &v14, NULL, &v13, AvlTree_rightHeavy);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v12, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_removeNodeWithLeftChildOnly() {
@@ -275,9 +275,9 @@ static void AvlTreeTest_removeNodeWithLeftChildOnly() {
     //    14
     //  11  15
     ASSERT_TREE(&tree, &v14, &v11, &v15);
-    ASSERT_NODE(&v14, NULL, &v11, &v15, AvlTree_balanced);
-    ASSERT_NODE(&v11, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v11, &v15, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v11, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_removeNodeWithRightChildOnly() {
@@ -300,9 +300,9 @@ static void AvlTreeTest_removeNodeWithRightChildOnly() {
     //    14
     //  13  15
     ASSERT_TREE(&tree, &v14, &v13, &v15);
-    ASSERT_NODE(&v14, NULL, &v13, &v15, AvlTree_balanced);
-    ASSERT_NODE(&v13, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v13, &v15, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v13, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_removeNodeWithBothChildren() {
@@ -328,10 +328,10 @@ static void AvlTreeTest_removeNodeWithBothChildren() {
     //     13         15
     //   11
     ASSERT_TREE(&tree, &v14, &v11, &v15);
-    ASSERT_NODE(&v14, NULL, &v13, &v15, AvlTree_leftHeavy);
-    ASSERT_NODE(&v13, &v14, &v11, NULL, AvlTree_leftHeavy);
-    ASSERT_NODE(&v15, &v14, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v11, &v13, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v14, NULL, &v13, &v15, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v13, &v14, &v11, NULL, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v15, &v14, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v11, &v13, NULL, NULL, AvlTree_balanced);
 }
 
 static void AvlTreeTest_removeNodeWithDeepChildren() {
@@ -357,10 +357,10 @@ static void AvlTreeTest_removeNodeWithDeepChildren() {
     //     11         15
     //              13
     ASSERT_TREE(&tree, &v12, &v11, &v15);
-    ASSERT_NODE(&v12, NULL, &v11, &v15, AvlTree_rightHeavy);
-    ASSERT_NODE(&v11, &v12, NULL, NULL, AvlTree_balanced);
-    ASSERT_NODE(&v15, &v12, &v13, NULL, AvlTree_leftHeavy);
-    ASSERT_NODE(&v13, &v15, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v12, NULL, &v11, &v15, AvlTree_rightHeavy);
+    ASSERT_NODE(&tree, &v11, &v12, NULL, NULL, AvlTree_balanced);
+    ASSERT_NODE(&tree, &v15, &v12, &v13, NULL, AvlTree_leftHeavy);
+    ASSERT_NODE(&tree, &v13, &v15, NULL, NULL, AvlTree_balanced);
 }
 
 void AvlTreeTest_run() {

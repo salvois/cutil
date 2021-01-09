@@ -68,21 +68,14 @@ struct AvlTree_Node {
  *   aware of node ordering (using the previously defined comparator).
  */
 typedef struct AvlTree {
-    AvlTree_Node *root;
+    AvlTree_Node sentinel; // used both to point to the root (via .left) and as leaf sentinel (.parent is updated but not meaningful)
     AvlTree_Node *leftmost;
     AvlTree_Node *rightmost;
 } AvlTree;
 
-/** Initializes an empty AVL tree. */
-static inline void AvlTree_initialize(AvlTree *tree) {
-    tree->root = NULL;
-    tree->leftmost = NULL;
-    tree->rightmost = NULL;
-}
-
 /** Returns true if the AVL tree contains no elements. */
 static inline bool AvlTree_isEmpty(const AvlTree *tree) {
-    return tree->root == NULL;
+    return tree->sentinel.left == &tree->sentinel;
 }
 
 static inline AvlTree_Node *AvlTree_getParent(const AvlTree_Node *node) {
@@ -92,6 +85,9 @@ static inline AvlTree_Node *AvlTree_getParent(const AvlTree_Node *node) {
 static inline int AvlTree_getBalance(const AvlTree_Node *node) {
     return node->parent & 3;
 }
+
+/** Initializes an empty AVL tree. */
+void AvlTree_initialize(AvlTree *tree);
 
 /** Removes the specified node from an AVL tree. */
 void AvlTree_remove(AvlTree *tree, AvlTree_Node *node);
@@ -129,41 +125,53 @@ static inline bool AvlTreeUintptr_Node_isLess(AvlTree_Node *node, AvlTree_Node *
  * @param isLess name of the function comparing nodes.
  */
 #define AvlTree_instantiateInsert(functionName, isLess)\
-void functionName(AvlTree *tree, AvlTree_Node *node) {\
-    node->left = NULL;\
-    node->right = NULL;\
-    if (tree->root != NULL) {\
-        if (isLess(node, tree->leftmost)) {\
-            node->parent = (uintptr_t) tree->leftmost | AvlTree_balanced;\
-            tree->leftmost->left = node;\
-            tree->leftmost = node;\
-        } else if (!isLess(node, tree->rightmost)) {\
-            node->parent = (uintptr_t) tree->rightmost | AvlTree_balanced;\
-            tree->rightmost->right = node;\
-            tree->rightmost = node;\
-        } else {\
-            AvlTree_Node *i = tree->root;\
-            while (i != NULL) {\
-                if (isLess(node, i)) {\
-                    if (i->left == NULL) {\
-                        i->left = node;\
-                        break;\
-                    }\
-                    i = i->left;\
-                } else {\
-                    if (i->right == NULL) {\
-                        i->right = node;\
-                        break;\
-                    }\
-                    i = i->right;\
-                }\
+static void functionName##_insertBeforeLeftmost(AvlTree *tree, AvlTree_Node *node) {\
+    node->parent = (uintptr_t) tree->leftmost | AvlTree_balanced;\
+    tree->leftmost->left = node;\
+    tree->leftmost = node;\
+}\
+\
+static void functionName##_insertAfterRightmost(AvlTree *tree, AvlTree_Node *node) {\
+    node->parent = (uintptr_t) tree->rightmost | AvlTree_balanced;\
+    tree->rightmost->right = node;\
+    tree->rightmost = node;\
+}\
+\
+static void functionName##_insertInOrder(AvlTree *tree, AvlTree_Node *node) {\
+    AvlTree_Node *i = tree->sentinel.left;\
+    while (i != &tree->sentinel) {\
+        if (isLess(node, i)) {\
+            if (i->left == &tree->sentinel) {\
+                i->left = node;\
+                break;\
             }\
-            node->parent = (uintptr_t) i | AvlTree_balanced;\
+            i = i->left;\
+        } else {\
+            if (i->right == &tree->sentinel) {\
+                i->right = node;\
+                break;\
+            }\
+            i = i->right;\
+        }\
+    }\
+    node->parent = (uintptr_t) i | AvlTree_balanced;\
+}\
+\
+void functionName(AvlTree *tree, AvlTree_Node *node) {\
+    node->left = &tree->sentinel;\
+    node->right = &tree->sentinel;\
+    if (!AvlTree_isEmpty(tree)) {\
+        if (isLess(node, tree->leftmost)) {\
+            functionName##_insertBeforeLeftmost(tree, node);\
+        } else if (!isLess(node, tree->rightmost)) {\
+            functionName##_insertAfterRightmost(tree, node);\
+        } else {\
+            functionName##_insertInOrder(tree, node);\
         }\
         AvlTree_rebalanceAfterInsertion(tree, node);\
     } else {\
-        node->parent = AvlTree_balanced; /* no parent */\
-        tree->root = node;\
+        node->parent = (uintptr_t) &tree->sentinel | AvlTree_balanced;\
+        tree->sentinel.left = node;\
         tree->leftmost = node;\
         tree->rightmost = node;\
     }\

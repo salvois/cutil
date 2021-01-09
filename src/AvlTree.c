@@ -44,7 +44,7 @@ static inline void setBalance(AvlTree_Node *node, int balance) {
     node->parent = (node->parent & ~3) | balance;
 }
 
-static void rotateLeft(AvlTree *tree, AvlTree_Node *parent) {
+static void rotateLeft(AvlTree_Node *parent) {
     AvlTree_Node *child = parent->right;
     int parentBalance = AvlTree_balanced;
     int childBalance = AvlTree_balanced;
@@ -56,13 +56,12 @@ static void rotateLeft(AvlTree *tree, AvlTree_Node *parent) {
     parent->right = child->left;
     child->left = parent;
     parent->parent = (uintptr_t) child | parentBalance;
-    if (parent->right != NULL) setParent(parent->right, parent);
-    if (parent == tree->root) tree->root = child;
-    else if (AvlTree_getParent(child)->right == parent) AvlTree_getParent(child)->right = child;
+    setParent(parent->right, parent);
+    if (AvlTree_getParent(child)->right == parent) AvlTree_getParent(child)->right = child;
     else AvlTree_getParent(child)->left = child;
 }
 
-static void rotateRight(AvlTree *tree, AvlTree_Node *parent) {
+static void rotateRight(AvlTree_Node *parent) {
     AvlTree_Node *child = parent->left;
     int parentBalance = AvlTree_balanced;
     int childBalance = AvlTree_balanced;
@@ -74,13 +73,12 @@ static void rotateRight(AvlTree *tree, AvlTree_Node *parent) {
     parent->left = child->right;
     child->right = parent;
     parent->parent = (uintptr_t) child | parentBalance;
-    if (parent->left != NULL) setParent(parent->left, parent);
-    if (parent == tree->root) tree->root = child;
-    else if (AvlTree_getParent(child)->left == parent) AvlTree_getParent(child)->left = child;
+    setParent(parent->left, parent);
+    if (AvlTree_getParent(child)->left == parent) AvlTree_getParent(child)->left = child;
     else AvlTree_getParent(child)->right = child;
 }
 
-static void rotateLeftRight(AvlTree *tree, AvlTree_Node *parent) {
+static void rotateLeftRight(AvlTree_Node *parent) {
     AvlTree_Node *child = parent->left;
     AvlTree_Node *grandChild = child->right;
     int parentBalance = AvlTree_balanced;
@@ -94,14 +92,13 @@ static void rotateLeftRight(AvlTree *tree, AvlTree_Node *parent) {
     grandChild->parent = (uintptr_t) AvlTree_getParent(parent) | AvlTree_balanced;
     parent->parent = (uintptr_t) grandChild | parentBalance;
     child->parent = (uintptr_t) grandChild | childBalance;
-    if (parent->left != NULL) setParent(parent->left, parent);
-    if (child->right != NULL) setParent(child->right, child);
-    if (parent == tree->root) tree->root = grandChild;
-    else if (parent == AvlTree_getParent(grandChild)->left) AvlTree_getParent(grandChild)->left = grandChild;
+    setParent(parent->left, parent);
+    setParent(child->right, child);
+    if (parent == AvlTree_getParent(grandChild)->left) AvlTree_getParent(grandChild)->left = grandChild;
     else AvlTree_getParent(grandChild)->right = grandChild;
 }
 
-static void rotateRightLeft(AvlTree *tree, AvlTree_Node *parent) {
+static void rotateRightLeft(AvlTree_Node *parent) {
     AvlTree_Node *child = parent->right;
     AvlTree_Node *grandChild = child->left;
     int parentBalance = AvlTree_balanced;
@@ -115,25 +112,24 @@ static void rotateRightLeft(AvlTree *tree, AvlTree_Node *parent) {
     grandChild->parent = (uintptr_t) AvlTree_getParent(parent) | AvlTree_balanced;
     parent->parent = (uintptr_t) grandChild | parentBalance;
     child->parent = (uintptr_t) grandChild | childBalance;
-    if (parent->right != NULL) setParent(parent->right, parent);
-    if (child->left != NULL) setParent(child->left, child);
-    if (parent == tree->root) tree->root = grandChild;
-    else if (parent == AvlTree_getParent(grandChild)->right) AvlTree_getParent(grandChild)->right = grandChild;
+    setParent(parent->right, parent);
+    setParent(child->left, child);
+    if (parent == AvlTree_getParent(grandChild)->right) AvlTree_getParent(grandChild)->right = grandChild;
     else AvlTree_getParent(grandChild)->left = grandChild;
 }
 
-static inline AvlTree_Node *findMin(AvlTree_Node *root) {
-    while (root->left != NULL) root = root->left;
+static inline AvlTree_Node *findMin(const AvlTree_Node *sentinel, AvlTree_Node *root) {
+    while (root->left != sentinel) root = root->left;
     return root;
 }
 
-static inline AvlTree_Node *findMax(AvlTree_Node *root) {
-    while (root->right != NULL) root = root->right;
+static inline AvlTree_Node *findMax(const AvlTree_Node *sentinel, AvlTree_Node *root) {
+    while (root->right != sentinel) root = root->right;
     return root;
 }
 
 void AvlTree_rebalanceAfterInsertion(AvlTree *tree, AvlTree_Node *node) {
-    while (node != tree->root) {
+    while (node != tree->sentinel.left) {
         AvlTree_Node *parent = AvlTree_getParent(node);
         int balance = AvlTree_getBalance(parent);
         if (balance == AvlTree_balanced) {
@@ -143,9 +139,9 @@ void AvlTree_rebalanceAfterInsertion(AvlTree *tree, AvlTree_Node *node) {
             if (node == parent->left) {
                 setBalance(parent, AvlTree_balanced);
             } else if (AvlTree_getBalance(node) == AvlTree_leftHeavy) {
-                rotateRightLeft(tree, parent);
+                rotateRightLeft(parent);
             } else {
-                rotateLeft(tree, parent);
+                rotateLeft(parent);
             }
             break;
         } else {
@@ -153,9 +149,9 @@ void AvlTree_rebalanceAfterInsertion(AvlTree *tree, AvlTree_Node *node) {
             if (node == parent->right) {
                 setBalance(parent, AvlTree_balanced);
             } else if (AvlTree_getBalance(node) == AvlTree_rightHeavy) {
-                rotateLeftRight(tree, parent);
+                rotateLeftRight(parent);
             } else {
-                rotateRight(tree, parent);
+                rotateRight(parent);
             }
             break;
         }
@@ -163,7 +159,7 @@ void AvlTree_rebalanceAfterInsertion(AvlTree *tree, AvlTree_Node *node) {
 }
 
 static void rebalanceAfterDeletion(AvlTree *tree, AvlTree_Node *current, AvlTree_Node *parent) {
-    while (current != tree->root) {
+    while (current != tree->sentinel.left) {
         int balance = AvlTree_getBalance(parent);
         if (balance == AvlTree_balanced) {
             setBalance(parent, (current == parent->right) ? AvlTree_leftHeavy : AvlTree_rightHeavy);
@@ -174,12 +170,12 @@ static void rebalanceAfterDeletion(AvlTree *tree, AvlTree_Node *current, AvlTree
                 current = parent;
             } else {
                 AvlTree_Node *sibling = parent->left;
-                assert(sibling != NULL);
+                assert(sibling != &tree->sentinel);
                 if (AvlTree_getBalance(sibling) == AvlTree_rightHeavy) {
-                    assert(sibling->right != NULL);
-                    rotateLeftRight(tree, parent);
+                    assert(sibling->right != &tree->sentinel);
+                    rotateLeftRight(parent);
                 } else {
-                    rotateRight(tree, parent);
+                    rotateRight(parent);
                 }
                 current = AvlTree_getParent(parent);
                 if (AvlTree_getBalance(current) == AvlTree_rightHeavy) break;
@@ -191,12 +187,12 @@ static void rebalanceAfterDeletion(AvlTree *tree, AvlTree_Node *current, AvlTree
                 current = parent;
             } else {
                 AvlTree_Node *sibling = parent->right;
-                assert(sibling != NULL);
+                assert(sibling != &tree->sentinel);
                 if (AvlTree_getBalance(sibling) == AvlTree_leftHeavy) {
-                    assert(sibling->left != NULL);
-                    rotateRightLeft(tree, parent);
+                    assert(sibling->left != &tree->sentinel);
+                    rotateRightLeft(parent);
                 } else {
-                    rotateLeft(tree, parent);
+                    rotateLeft(parent);
                 }
                 current = AvlTree_getParent(parent);
                 if (AvlTree_getBalance(current) == AvlTree_leftHeavy) break;
@@ -206,35 +202,42 @@ static void rebalanceAfterDeletion(AvlTree *tree, AvlTree_Node *current, AvlTree
     }    
 }
 
+void AvlTree_initialize(AvlTree *tree) {
+    tree->sentinel.parent = 0;
+    tree->sentinel.left = &tree->sentinel;
+    tree->sentinel.right = &tree->sentinel;
+    tree->leftmost = &tree->sentinel;
+    tree->rightmost = &tree->sentinel;
+}
+
 void AvlTree_remove(AvlTree *tree, AvlTree_Node *node) {
-    if (node->left == NULL || node->right == NULL) {
+    if (node->left == &tree->sentinel || node->right == &tree->sentinel) {
         AvlTree_Node *parent = AvlTree_getParent(node);
-        AvlTree_Node *replacement = (node->left != NULL) ? node->left : node->right;
-        if (replacement != NULL) setParent(replacement, parent);
-        if (tree->root == node) tree->root = replacement;
-        else if (parent->left == node) parent->left = replacement;
+        AvlTree_Node *replacement = (node->left != &tree->sentinel) ? node->left : node->right;
+        setParent(replacement, parent);
+        if (parent->left == node) parent->left = replacement;
         else parent->right = replacement;
         if (tree->leftmost == node) {
-            if (node->right == NULL) {
-                assert(node->left == NULL);
+            if (node->right == &tree->sentinel) {
+                assert(node->left == &tree->sentinel);
                 tree->leftmost = parent;
             } else {
-                tree->leftmost = findMin(replacement);
+                tree->leftmost = findMin(&tree->sentinel, replacement);
             }
         }
         if (tree->rightmost == node) {
-            if (node->left == NULL) {
-                assert(node->right == NULL);
+            if (node->left == &tree->sentinel) {
+                assert(node->right == &tree->sentinel);
                 tree->rightmost = parent;
             } else {
-                tree->rightmost = findMax(replacement);
+                tree->rightmost = findMax(&tree->sentinel, replacement);
             }
         }
         rebalanceAfterDeletion(tree, replacement, parent);
     } else {
         assert(node != tree->leftmost);
         assert(node != tree->rightmost);
-        AvlTree_Node *successor = findMin(node->right);
+        AvlTree_Node *successor = findMin(&tree->sentinel, node->right);
         AvlTree_Node *replacement = successor->right;
         AvlTree_Node *replacementParent;
         setParent(node->left, successor);
@@ -242,7 +245,7 @@ void AvlTree_remove(AvlTree *tree, AvlTree_Node *node) {
         if (successor != node->right) {
             replacementParent = AvlTree_getParent(successor);
             AvlTree_Node* successorParent = AvlTree_getParent(successor);
-            if (replacement != NULL) setParent(replacement, successorParent);
+            setParent(replacement, successorParent);
             successorParent->left = replacement;
             successor->right = node->right;
             setParent(node->right, successor);
@@ -250,9 +253,8 @@ void AvlTree_remove(AvlTree *tree, AvlTree_Node *node) {
             replacementParent = successor;
         }
         AvlTree_Node* parent = AvlTree_getParent(node);
-        if (successor != NULL) successor->parent = node->parent; // both same parent and balance factor
-        if (tree->root == node) tree->root = successor;
-        else if (parent->left == node) parent->left = successor;
+        successor->parent = node->parent; // both same parent and balance factor
+        if (parent->left == node) parent->left = successor;
         else parent->right = successor;
         rebalanceAfterDeletion(tree, replacement, replacementParent);
     }
